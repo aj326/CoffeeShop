@@ -5,9 +5,12 @@ import json
 from flask_cors import CORS
 
 from .database.models import db_drop_and_create_all, setup_db, Drink
-from .auth.auth import AuthError, requires_auth
+from .auth.auth import AuthError, requires_auth, get_token_auth_header, verify_decode_jwt
 
 app = Flask(__name__)
+print(__name__)
+print(app)
+print("Here i am")
 setup_db(app)
 CORS(app)
 
@@ -80,8 +83,11 @@ CORS(app)
 '''
 Example error handling for unprocessable entity
 '''
-
-
+@requires_auth
+@app.route("/")
+def idx():
+    print("paylod: ", verify_decode_jwt(get_token_auth_header()))
+    return "test"
 @app.errorhandler(422)
 def unprocessable(error):
     return jsonify({
