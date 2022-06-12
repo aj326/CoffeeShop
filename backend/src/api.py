@@ -20,8 +20,7 @@ CORS(app)
 !! NOTE THIS MUST BE UNCOMMENTED ON FIRST RUN
 !! Running this funciton will add one
 '''
-# db_drop_and_create_all()
-
+db_drop_and_create_all()
 # ROUTES
 '''
 @DONE implement endpoint
@@ -37,11 +36,13 @@ CORS(app)
 def get_drinks():
     try:
         selection = Drink.query.order_by(Drink.id).all()
-        short = [drink.short() for drink in selection]
+        print('element',selection[0].short())
+        for drink in selection:
+            print(drink.short())
         return jsonify(
             {
                 "success": True,
-                "drinks": short,
+                "drinks": [drink.short() for drink in selection],
             }
         )
     except requests.HTTPError:
@@ -125,19 +126,26 @@ def patch_drink(permission, id):
     if drink:
         data = request.get_json()
         title = data.get('title', None)
-        recipe = data.get('recipe', None)
-        # could be slightly optimized by checking if old and new field are not equal
-        if title: drink.title = title
-        if recipe: drink.recipe = json.dumps(recipe)
+        recipe = data.get('recipe', [])
+        print(title,recipe)
         try:
+            if title:
+                    drink.title = title
+                    print(title)
+            if recipe:
+                    drink.recipe = json.dumps(recipe)
+                    print(recipe)
             drink.update()
-            return jsonify(
+
+        except:
+            print("error",title,recipe)
+            abort(500)
+        return jsonify(
                 {
                     "success": True,
                     "drinks": [drink.long()]
                 })
-        except sqlalchemy.exc.DataError:
-            abort(500)
+
     else:
         abort(404)
 
