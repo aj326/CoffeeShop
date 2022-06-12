@@ -5,7 +5,7 @@ import json
 from flask_cors import CORS
 
 from .database.models import db_drop_and_create_all, setup_db, Drink
-from .auth.auth import AuthError, requires_auth, get_token_auth_header, verify_decode_jwt
+from .auth.auth import AuthError, requires_auth, get_token_auth_header, verify_decode_jwt, check_permissions
 
 app = Flask(__name__)
 print(__name__)
@@ -32,7 +32,6 @@ CORS(app)
         or appropriate status code indicating reason for failure
 '''
 
-
 '''
 @TODO implement endpoint
     GET /drinks-detail
@@ -41,7 +40,6 @@ CORS(app)
     returns status code 200 and json {"success": True, "drinks": drinks} where drinks is the list of drinks
         or appropriate status code indicating reason for failure
 '''
-
 
 '''
 @TODO implement endpoint
@@ -52,7 +50,6 @@ CORS(app)
     returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the newly created drink
         or appropriate status code indicating reason for failure
 '''
-
 
 '''
 @TODO implement endpoint
@@ -66,7 +63,6 @@ CORS(app)
         or appropriate status code indicating reason for failure
 '''
 
-
 '''
 @TODO implement endpoint
     DELETE /drinks/<id>
@@ -78,16 +74,22 @@ CORS(app)
         or appropriate status code indicating reason for failure
 '''
 
-
 # Error Handling
 '''
 Example error handling for unprocessable entity
 '''
-@requires_auth
+
+
 @app.route("/")
-def idx():
-    print("paylod: ", verify_decode_jwt(get_token_auth_header()))
+@requires_auth('get:drinks')
+def idx(permission):
+    # token = get_token_auth_header()
+    # payload = verify_decode_jwt(token)
+    # print(check_permissions('get:drinks', payload))
+    print(permission)
     return "test"
+
+
 @app.errorhandler(422)
 def unprocessable(error):
     return jsonify({
@@ -112,7 +114,6 @@ def unprocessable(error):
 @TODO implement error handler for 404
     error handler should conform to general task above
 '''
-
 
 '''
 @TODO implement error handler for AuthError
