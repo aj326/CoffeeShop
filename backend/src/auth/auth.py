@@ -142,6 +142,10 @@ def verify_decode_jwt(token):
                              "description":
                                  "Unable to parse authentication"
                                  " token."}, 401)
+    raise AuthError({
+                'code': 'invalid_header',
+                'description': 'Unable to find the appropriate key.'
+            }, 400)
 
 
 '''
@@ -163,7 +167,6 @@ def requires_auth(permission=''):
             token = get_token_auth_header()
             payload = verify_decode_jwt(token)
             c = check_permissions(permission, payload)
-            print(c)
             return f(payload, *args, **kwargs)
 
         return wrapper

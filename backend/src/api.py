@@ -11,17 +11,11 @@ from .database.models import db_drop_and_create_all, setup_db, Drink
 from .auth.auth import AuthError, requires_auth, get_token_auth_header, verify_decode_jwt, check_permissions
 
 app = Flask(__name__)
-print(__name__)
-print(app)
-print("Here i am")
 setup_db(app)
 CORS(app)
 
-
-
-
 '''
-@TODO uncomment the following line to initialize the datbase
+@DONE uncomment the following line to initialize the datbase
 !! NOTE THIS WILL DROP ALL RECORDS AND START YOUR DB FROM SCRATCH
 !! NOTE THIS MUST BE UNCOMMENTED ON FIRST RUN
 !! Running this funciton will add one
@@ -112,7 +106,7 @@ def create_new_drink(permission):
 
 
 '''
-@TODO implement endpoint
+@DONE implement endpoint
     PATCH /drinks/<id>
         where <id> is the existing model id
         it should respond with a 404 error if <id> is not found
@@ -123,8 +117,33 @@ def create_new_drink(permission):
         or appropriate status code indicating reason for failure
 '''
 
+
+@app.route("/drinks/<int:id>", methods=['PATCH'])
+@requires_auth('patch:drinks')
+def patch_drink(permission, id):
+    drink = Drink.query.get(id)
+    if drink:
+        data = request.get_json()
+        title = data.get('title', None)
+        recipe = data.get('recipe', None)
+        # could be slightly optimized by checking if old and new field are not equal
+        if title: drink.title = title
+        if recipe: drink.recipe = json.dumps(recipe)
+        try:
+            drink.update()
+            return jsonify(
+                {
+                    "success": True,
+                    "drinks": [drink.long()]
+                })
+        except sqlalchemy.exc.DataError:
+            abort(500)
+    else:
+        abort(404)
+
+
 '''
-@TODO implement endpoint
+@DONE implement endpoint
     DELETE /drinks/<id>
         where <id> is the existing model id
         it should respond with a 404 error if <id> is not found
@@ -134,21 +153,30 @@ def create_new_drink(permission):
         or appropriate status code indicating reason for failure
 '''
 
+
+@app.route("/drinks/<int:id>", methods=['DELETE'])
+@requires_auth('delete:drinks')
+def delete_drink(permission, id):
+    drink = Drink.query.get(id)
+    if drink:
+        try:
+            drink.delete()
+            return jsonify(
+                {
+                    "success": True,
+                    "delete": id
+                })
+        except sqlalchemy.exc.DataError:
+            abort(500)
+    else:
+        abort(404)
+
+
 # Error Handling
 '''
 Example error handling for unprocessable entity
+@DONE
 '''
-
-
-# @TODO delete this
-@app.route("/")
-@requires_auth('get:drinks')
-def idx(permission):
-    # token = get_token_auth_header()
-    # payload = verify_decode_jwt(token)
-    # print(check_permissions('get:drinks', payload))
-    print(permission)
-    return "test"
 
 
 @app.errorhandler(422)
@@ -168,6 +196,7 @@ def resource_not_found(error):
         "message": "resource not found"
     }), 404
 
+
 @app.errorhandler(500)
 def internal_server_error(error):
     return jsonify({
@@ -179,31 +208,8 @@ def internal_server_error(error):
 
 @app.errorhandler(AuthError)
 def auth_error(error):
-    # print("in autherror", error)
     return jsonify({
         "success": False,
         "error": error.status_code,
         "message": error.error['description']
     }), error.status_code
-
-
-'''
-@TODO implement error handlers using the @app.errorhandler(error) decorator
-    each error handler should return (with approprate messages):
-             jsonify({
-                    "success": False,
-                    "error": 404,
-                    "message": "resource not found"
-                    }), 404
-
-'''
-
-'''
-@DONE implement error handler for 404
-    error handler should conform to general task above
-'''
-
-'''
-@DONE implement error handler for AuthError
-    error handler should conform to general task above
-'''
